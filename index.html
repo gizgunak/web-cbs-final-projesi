@@ -1,48 +1,56 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web CBS - Türkiye İller ve İlçeler</title>
-    
-    <!-- OpenLayers CSS -->
-    <link rel="stylesheet" href="https://unpkg.com">
-    
-    <!-- Kendi Stil Dosyamız -->
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Türkiye İl / İlçe Haritası</title>
+
+  <!-- OpenLayers kütüphanesinin kendi CSS dosyası (harita kontrolleri için gerekli) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@9.2.4/ol.css">
+
+  <!-- Bizim kendi görsel tasarım dosyamız -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- Seçim Menüleri ve Yükleniyor Göstergesi Konteyneri -->
-    <div id="kontrol-paneli">
-        <div class="secim-grubu">
-            <label for="il-seciniz">İl:</label>
-            <select id="il-seciniz">
-                <option value="">Yükleniyor...</option>
-            </select>
-        </div>
-
-        <div class="secim-grubu">
-            <label for="ilce-seciniz">İlçe:</label>
-            <select id="ilce-seciniz" disabled>
-                <option value="">Önce İl Seçiniz</option>
-            </select>
-        </div>
-
-        <!-- Yükleniyor Göstergesi -->
-        <div id="yukleniyor-text">Harita Hazırlanıyor...</div>
+  <!-- Haritanın üstünde duran İl / İlçe seçim kutuları -->
+  <div id="controls">
+    <div class="control-group">
+      <label for="ilSelect">İl Seçimi</label>
+      <select id="ilSelect">
+        <option value="">-- İl Seçin --</option>
+      </select>
     </div>
 
-    <!-- Haritanın Çizileceği Alan -->
-    <div id="map"></div>
+    <div class="control-group">
+      <label for="ilceSelect">İlçe Seçimi</label>
+      <select id="ilceSelect" disabled>
+        <option value="">-- Önce İl Seçin --</option>
+      </select>
+    </div>
+  </div>
 
-    <!-- OpenLayers JS Kütüphanesi -->
-    <script src="https://unpkg.com"></script>
+  <!-- Tam ekran harita alanı -->
+  <div id="map"></div>
 
-    <!-- Supabase JS Kütüphanesi (CORS Engeline Takılmayan Güvenli Versiyon) -->
-    <script src="https://unpkg.com"></script>
+  <!-- Veri çekilirken gösterilecek "Yükleniyor..." katmanı -->
+  <div id="loading">
+    <div id="loading-box">Yükleniyor...</div>
+  </div>
 
-    <!-- Harita Kodlarımızı İçeren JavaScript Dosyamız -->
-    <script src="app.js"></script>
+  <!--
+    OpenLayers kütüphanesi: normal (klasik) bir <script> etiketi ile yükleniyor.
+    Bu, sayfada global bir "ol" nesnesi oluşturur; app.js içinde ol.Map,
+    ol.source.Vector gibi ifadeleri bu sayede kullanabiliyoruz.
+    Build aracı (Vite/Webpack) YOK, npm install YOK — her şey CDN üzerinden geliyor.
+  -->
+  <script src="https://cdn.jsdelivr.net/npm/ol@9.2.4/dist/ol.js"></script>
+
+  <!--
+    Kendi uygulama kodumuz: type="module" olduğu için içinde
+    "import { createClient } from '...'" gibi ES module import ifadeleri kullanabiliyoruz.
+  -->
+  <script type="module" src="app.js"></script>
+
 </body>
 </html>
