@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web CBS - Türkiye İller ve İlçeler</title>
     
-    <!-- OpenLayers CSS (Harita Tasarımı) -->
-    <link rel="stylesheet" href="https://jsdelivr.net">
+    <!-- OpenLayers CSS (Alternatif Güvenli Sunucudan) -->
+    <link rel="stylesheet" href="https://unpkg.com">
     
     <!-- Kendi Stil Dosyamız -->
     <link rel="stylesheet" href="style.css">
@@ -30,16 +30,17 @@
         </div>
 
         <!-- Yükleniyor Göstergesi -->
-        <div id="yukleniyor-text">Harita Hazırlanıyor...</div>
+        <div id="yukleniyor-text">Harita Hazirlaniyor...</div>
     </div>
 
     <!-- Haritanın Çizileceği Alan -->
     <div id="map"></div>
 
-    <!-- OpenLayers JS Kütüphanesi -->
-    <script src="https://jsdelivr.net"></script>
+    <!-- OpenLayers JS Kütüphanesi (Alternatif Güvenli Sunucudan) -->
+    <script src="https://unpkg.com"></script>
 
-    <!-- Supabase ve Harita Kodlarımızı İçeren JavaScript Dosyamız (ES Modül olarak) -->
+    <!-- Supabase ve Harita Kodlarımızı İçeren JavaScript Dosyamız -->
     <script type="module" src="app.js"></script>
 </body>
 </html>
+
