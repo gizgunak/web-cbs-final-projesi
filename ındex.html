@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web CBS - Türkiye İller ve İlçeler</title>
+    
+    <!-- OpenLayers CSS (Harita Tasarımı) -->
+    <link rel="stylesheet" href="https://jsdelivr.net">
+    
+    <!-- Kendi Stil Dosyamız -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Seçim Menüleri ve Yükleniyor Göstergesi Konteyneri -->
+    <div id="kontrol-paneli">
+        <div class="secim-grubu">
+            <label for="il-seciniz">İl:</label>
+            <select id="il-seciniz">
+                <option value="">Yükleniyor...</option>
+            </select>
+        </div>
+
+        <div class="secim-grubu">
+            <label for="ilce-seciniz">İlçe:</label>
+            <select id="ilce-seciniz" disabled>
+                <option value="">Önce İl Seçiniz</option>
+            </select>
+        </div>
+
+        <!-- Yükleniyor Göstergesi -->
+        <div id="yukleniyor-text">Harita Hazırlanıyor...</div>
+    </div>
+
+    <!-- Haritanın Çizileceği Alan -->
+    <div id="map"></div>
+
+    <!-- OpenLayers JS Kütüphanesi -->
+    <script src="https://jsdelivr.net"></script>
+
+    <!-- Supabase ve Harita Kodlarımızı İçeren JavaScript Dosyamız (ES Modül olarak) -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
