@@ -1,11 +1,9 @@
 // 1. SUPABASE BAĞLANTI AYARLARI
-// Supabase kütüphanesini unpkg üzerinden güvenli şekilde çekiyoruz
-import { createClient } from 'https://unpkg.com';
-
 const SUPABASE_URL = "https://uijhphccjchxofyftcii.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_iZY7BMN5dbRo4p3EGYo1fg_IolsSjsq";
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// index.html içinde yüklediğimiz global Supabase nesnesini kullanıyoruz
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // 2. HTML ELEMENTLERİNİ TANIMLAMA
 const ilSelect = document.getElementById('il-seciniz');
@@ -38,7 +36,7 @@ const ilceKatmani = new ol.layer.Vector({
         stroke: new ol.style.Stroke({
             color: '#ff5722',
             width: 1.5,
-            lineDash: [4, 4] // Hata veren kısım düzeltildi: Kesikli çizgi yapısı ayarlandı
+            lineDash: [4, 4]
         }),
         fill: new ol.style.Fill({
             color: 'rgba(255, 87, 34, 0.05)'
@@ -66,7 +64,7 @@ const geojsonOkuyucu = new ol.format.GeoJSON({
 function durumGuncelle(mesaj, gorunurMu = true) {
     if (gorunurMu) {
         yukleniyorYazisi.style.display = "block";
-        yukleniyorYazisi.innerText = mensaje || mesaj;
+        yukleniyorYazisi.innerText = mesaj;
     } else {
         yukleniyorYazisi.style.display = "none";
     }
@@ -118,7 +116,7 @@ async function ilceleriYukle(ilKodu) {
         ilceSelect.innerHTML = '<option value="">Yükleniyor...</option>';
         ilceSelect.disabled = true;
 
-        const { data, error } = await supabase.rpc('get_tr_ilceler_geojson', { gid_1: ilKodu });
+        const { data, error } = await supabase.rpc('get_tr_ilceler_geojson', { gid_1 : ilKodu });
 
         if (error) throw error;
 
@@ -166,7 +164,7 @@ ilSelect.addEventListener('change', (e) => {
     const secilenIlFeature = ilKaynak.getFeatures().find(f => (f.get('il_kodu') || f.get('id')) == secilenIlKodu);
     if (secilenIlFeature) {
         const geometri = secilenIlFeature.getGeometry();
-        haritaGorunumu.fit(geometri, { padding:[50, 50, 50, 50], duration: 1000 }); // Hata veren kısım düzeltildi
+        haritaGorunumu.fit(geometri, { padding: [50, 50, 50, 50], duration: 1000 });
     }
 
     ilceleriYukle(secilenIlKodu);
@@ -179,8 +177,9 @@ ilceSelect.addEventListener('change', (e) => {
     const secilenIlceFeature = ilceKaynak.getFeatures().find(f => (f.get('ilce_kodu') || f.get('id')) == secilenIlceKodu);
     if (secilenIlceFeature) {
         const geometri = secilenIlceFeature.getGeometry();
-        haritaGorunumu.fit(geometri, { padding:[50, 50, 50, 50], duration: 1000 }); // Hata veren kısım düzeltildi
+        haritaGorunumu.fit(geometri, { padding: [50, 50, 50, 50], duration: 1000 });
     }
 });
 
+// Sayfa ilk açıldığında illeri yükleyerek sistemi başlat
 illeriYukle();
