@@ -2,8 +2,8 @@
 const SUPABASE_URL = "https://uijhphccjchxofyftcii.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_iZY7BMN5dbRo4p3EGYo1fg_IolsSjsq";
 
-// index.html içinde yüklediğimiz global Supabase nesnesini kullanıyoruz
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// HATA DÜZELTİLDİ: Başındaki küçük harfli 'supabase' yerine 'window.supabase' yazıldı.
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // 2. HTML ELEMENTLERİNİ TANIMLAMA
 const ilSelect = document.getElementById('il-seciniz');
