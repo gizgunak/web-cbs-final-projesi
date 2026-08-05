@@ -59,6 +59,21 @@ html, body {
   cursor: not-allowed;
 }
 
+.control-group button {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #1d4ed8;
+  background: #1d4ed8;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.control-group button:hover {
+  background: #1e40af;
+}
+
 /* Yükleniyor göstergesi: harita hazır olana kadar tüm ekranı kaplar */
 #loading {
   position: absolute;
@@ -86,4 +101,31 @@ html, body {
   font-size: 16px;
   font-weight: 600;
   color: #333;
+}
+
+/* Fare ile üzerine gelinen il/ilçe adını gösteren balon.
+   Görünürlüğünü OpenLayers (ol.Overlay), konum verilip verilmediğine göre
+   kendisi otomatik yönetiyor — burada sadece görünümünü tanımlıyoruz. */
+.ol-tooltip {
+  position: relative;
+  background: rgba(20, 20, 20, 0.85);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none; /* balon fare olaylarını yakalamasın, haritanın altında kalsın */
+}
+
+/* Balonun altında, hangi noktayı işaret ettiğini gösteren küçük ok */
+.ol-tooltip::before {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  margin-left: -6px;
+  border-top: 6px solid rgba(20, 20, 20, 0.85);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
 }

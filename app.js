@@ -36,11 +36,11 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // yazıp çalıştırın, dönen JSON'un "properties" kısmındaki alan adlarına bakın.
 // ============================================================================
 const FIELD = {
-  ilAdi: 'name_1',        // il tablosunda ilin adını tutan kolon
-  ilKodu: 'gid_1',   // il tablosunda ilin benzersiz kodunu tutan kolon (örn. plaka no)
-  ilceAdi: 'name_2',    // ilçe tablosunda ilçenin adını tutan kolon
-  ilceIlKodu: 'gid_1' // ilçe tablosunda, ilçenin HANGİ İLE ait olduğunu gösteren kolon
-                            // (yukarıdaki ilKodu ile aynı değerleri taşımalı ki eşleştirme yapılabilsin)
+  ilAdi: 'name_1',        // il tablosunda ilin adını tutan kolon (GADM: name_1)
+  ilKodu: 'gid_1',        // il tablosunda ilin benzersiz GADM kimliği (GADM: gid_1)
+  ilceAdi: 'name_2',      // ilçe tablosunda ilçenin adını tutan kolon (GADM: name_2)
+  ilceIlKodu: 'gid_1'     // ilçe tablosunda, ilçenin HANGİ İLE ait olduğunu gösteren kolon
+                            // (GADM'de ilçe tablosu da üst ilin gid_1 değerini taşır)
 };
 
 // Supabase'deki RPC (fonksiyon) isimleri
@@ -61,6 +61,44 @@ function yuklemeGizle() {
 // ============================================================================
 // 4) HARİTA KURULUMU
 // ============================================================================
+// Taban harita (basemap) seçenekleri: hepsi açık kaynak / ücretsiz, API
+// anahtarı gerektirmez. Açık ve Koyu temalar CARTO'nun (basemaps.cartocdn.com)
+// herkese açık, PNG dışa aktarma ile uyumlu (CORS izinli) karo sunucusundan
+// geliyor. Her sağlayıcının kullanım şartları gereği "attributions" (atıf)
+// metnini haritanın sağ alt köşesinde otomatik gösteriyoruz; kaldırmayın.
+const osmLayer = new ol.layer.Tile({
+  source: new ol.source.OSM(),
+  visible: true // sayfa açıldığında görünen varsayılan tema
+});
+
+const cartoLightLayer = new ol.layer.Tile({
+  source: new ol.source.XYZ({
+    url: 'https://{a-d}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+    attributions: '© OpenStreetMap katkıda bulunanları © CARTO',
+    crossOrigin: 'anonymous', // PNG olarak dışa aktarma özelliğinin çalışabilmesi için gerekli
+    maxZoom: 20
+  }),
+  visible: false
+});
+
+const cartoDarkLayer = new ol.layer.Tile({
+  source: new ol.source.XYZ({
+    url: 'https://{a-d}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+    attributions: '© OpenStreetMap katkıda bulunanları © CARTO',
+    crossOrigin: 'anonymous',
+    maxZoom: 20
+  }),
+  visible: false
+});
+
+// "Harita Teması" seçim menüsündeki <option value="..."> değerleriyle
+// yukarıdaki katmanları eşleştiren sözlük — basemapSelect olayında kullanılıyor
+const basemapLayers = {
+  osm: osmLayer,
+  cartoLight: cartoLightLayer,
+  cartoDark: cartoDarkLayer
+};
+
 // GeoJSON okumak/yazmak için OpenLayers formatı
 const geoJsonFormat = new ol.format.GeoJSON();
 
@@ -86,11 +124,48 @@ const ilceLayer = new ol.layer.Vector({
 
 const map = new ol.Map({
   target: 'map',
-  layers: [illerLayer, ilceLayer],
+  // Katman sırası önemli: OpenLayers listede önce gelen katmanı en ALTA çizer.
+  // Bu yüzden taban harita katmanları en altta (aynı anda sadece biri "visible"),
+  // il/ilçe sınırları onların üstünde.
+  layers: [osmLayer, cartoLightLayer, cartoDarkLayer, illerLayer, ilceLayer],
   view: new ol.View({
     center: ol.proj.fromLonLat([35.0, 39.0]), // Türkiye'nin ortalaması
     zoom: 6
   })
+});
+
+// ----------------------------------------------------------------------------
+// Fare ile üzerine gelinen il/ilçe adını gösteren tooltip
+// ----------------------------------------------------------------------------
+const tooltipElement = document.getElementById('tooltip');
+const tooltipOverlay = new ol.Overlay({
+  element: tooltipElement,
+  offset: [0, -12],       // balonu imlecin biraz üstünde göster
+  positioning: 'bottom-center'
+});
+map.addOverlay(tooltipOverlay);
+
+map.on('pointermove', (evt) => {
+  // Harita sürükleniyorsa (kullanıcı haritayı kaydırıyorsa) tooltip'i gösterme
+  if (evt.dragging) {
+    tooltipOverlay.setPosition(undefined);
+    return;
+  }
+
+  // İmlecin altındaki EN ÜSTTEKİ feature'ı bul (ilçe katmanı üstte olduğu için
+  // ilçeler görünürken önce onlar, değilse iller yakalanır)
+  const feature = map.forEachFeatureAtPixel(evt.pixel, (feat) => feat);
+
+  if (feature) {
+    // Önce ilçe adını dene, yoksa il adını göster
+    const ad = feature.get(FIELD.ilceAdi) || feature.get(FIELD.ilAdi) || '';
+    tooltipElement.textContent = ad;
+    tooltipOverlay.setPosition(evt.coordinate);
+    map.getViewport().style.cursor = 'pointer';
+  } else {
+    tooltipOverlay.setPosition(undefined);
+    map.getViewport().style.cursor = '';
+  }
 });
 
 // Seçilen değere göre ilgili OpenLayers feature'ına hızlı erişim için sözlükler
@@ -269,7 +344,86 @@ ilceSelect.addEventListener('change', () => {
 });
 
 // ============================================================================
-// 9) BAŞLANGIÇ: sayfa açılır açılmaz illeri ve ilçeleri yükle
+// 9) HARİTA TEMASI SEÇİLİNCE: seçilen taban haritayı göster, diğerlerini gizle
+// ============================================================================
+const basemapSelect = document.getElementById('basemapSelect');
+basemapSelect.addEventListener('change', () => {
+  const secilenTema = basemapSelect.value;
+  Object.entries(basemapLayers).forEach(([anahtar, katman]) => {
+    katman.setVisible(anahtar === secilenTema);
+  });
+});
+
+// ============================================================================
+// 10) GÖRÜNEN HARİTAYI PNG OLARAK İNDİRME
+// ============================================================================
+// OpenLayers, haritayı katman katman ayrı <canvas> elemanlarına çiziyor.
+// PNG oluşturmak için: taban harita + il/ilçe katmanlarının tamamını tek bir
+// geçici canvas üzerinde birleştirip, o birleşik görüntüyü dosya olarak indiriyoruz.
+document.getElementById('exportButton').addEventListener('click', () => {
+  // rendercomplete: haritanın o an ekranda görünen tüm karolarının/çizimlerinin
+  // tamamlandığı an — PNG'yi bu olaydan SONRA oluşturuyoruz ki eksik/boş görünmesin.
+  map.once('rendercomplete', () => {
+    try {
+      const mapCanvas = document.createElement('canvas');
+      const mapSize = map.getSize();
+      mapCanvas.width = mapSize[0];
+      mapCanvas.height = mapSize[1];
+      const mapContext = mapCanvas.getContext('2d');
+
+      // Haritadaki her bir katmanın canvas'ını sırayla büyük canvas'ın üzerine çiz
+      Array.prototype.forEach.call(
+        map.getViewport().querySelectorAll('.ol-layer canvas, canvas.ol-layer'),
+        (canvas) => {
+          if (canvas.width === 0) return; // görünmeyen (visible:false) katmanları atla
+
+          const katmanOpacity = canvas.parentNode.style.opacity || canvas.style.opacity;
+          mapContext.globalAlpha = katmanOpacity === '' ? 1 : Number(katmanOpacity);
+
+          // Katmanın ekran üzerindeki konum/dönüşüm bilgisini (transform matrisini) al
+          const transform = canvas.style.transform;
+          const matrix = transform
+            .match(/^matrix\(([^\(]*)\)$/)[1]
+            .split(',')
+            .map(Number);
+          CanvasRenderingContext2D.prototype.setTransform.apply(mapContext, matrix);
+          mapContext.drawImage(canvas, 0, 0);
+        }
+      );
+
+      mapContext.globalAlpha = 1;
+
+      // Birleşik canvas'ı PNG dosyasına çevirip otomatik indirmeyi başlat
+      mapCanvas.toBlob((blob) => {
+        if (!blob) {
+          console.error('❌ PNG oluşturulamadı (blob boş döndü).');
+          alert('Harita PNG olarak oluşturulamadı. Konsolu (F12) kontrol edin.');
+          return;
+        }
+        const tarih = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+        const link = document.createElement('a');
+        link.download = `harita-${tarih}.png`;
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+      });
+
+    } catch (err) {
+      // En sık karşılaşılan sebep: taban harita sağlayıcısının (CartoDB/OpenTopoMap)
+      // sunucusu CORS izni vermiyor ve canvas "kirlenmiş" (tainted) hale geliyor.
+      console.error('❌ Harita PNG olarak dışa aktarılamadı:', err);
+      alert('Harita PNG olarak indirilemedi. Bu genelde seçili harita temasının '
+        + 'sunucusundan kaynaklanan bir izin (CORS) sorunudur — farklı bir tema '
+        + 'seçip tekrar deneyin. Ayrıntı için konsola (F12) bakın.');
+    }
+  });
+
+  // Yukarıdaki 'rendercomplete' dinleyicisini tetiklemek için haritayı yeniden çizdiriyoruz
+  map.renderSync();
+});
+
+// ============================================================================
+// 11) BAŞLANGIÇ: sayfa açılır açılmaz illeri ve ilçeleri yükle
 // ============================================================================
 async function baslat() {
   yuklemeGoster();

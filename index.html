@@ -28,10 +28,28 @@
         <option value="">-- Önce İl Seçin --</option>
       </select>
     </div>
+
+    <div class="control-group">
+      <label for="basemapSelect">Harita Teması</label>
+      <select id="basemapSelect">
+        <option value="osm">OpenStreetMap (standart)</option>
+        <option value="cartoLight">Açık Tema</option>
+        <option value="cartoDark">Koyu Tema</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <button id="exportButton" type="button">PNG Olarak İndir</button>
+    </div>
   </div>
 
   <!-- Tam ekran harita alanı -->
   <div id="map"></div>
+
+  <!-- Fare ile üzerine gelinen il/ilçe adını gösteren bilgi balonu.
+       Boş bırakıyoruz; içeriğini ve konumunu app.js JavaScript ile dolduracak. -->
+  <div id="tooltip" class="ol-tooltip"></div>
 
   <!-- Veri çekilirken gösterilecek "Yükleniyor..." katmanı -->
   <div id="loading">
